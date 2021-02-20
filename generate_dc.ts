@@ -28,6 +28,7 @@ interface Rack {
     blenderYSize: number;
     blenderZCenter: number;
     blenderZSize: number;
+    blenderZUnitStart: number;
     colorStartBlue: number;
     colorStartGreen: number;
     colorStartRed: number;
@@ -56,8 +57,8 @@ function generateRacks(){
     var blenderZSize: number;
     var rotation: number;
     var tempRackData: Record<string,Rack> = {};
-    maxRow = 6;
-    maxRack = 20;
+    maxRow = 4;
+    maxRack = 8;
     for (countRow = 0; countRow < maxRow; countRow++){
         for (countRack = 0; countRack < maxRack; countRack++){
             if (countRow % 2 == 0){
@@ -67,11 +68,11 @@ function generateRacks(){
                 rotation = 0;
             }
             rackName = "rack_" + countRow + "_" + countRack;
-            blenderXCenter = (countRack * 0.6) + 2.4;
-            blenderXSize = 0.58;
-            blenderYCenter = (countRow * 2.4) + 2.4;
+            blenderXCenter = (countRack * 0.62) + 0.31;
+            blenderXSize = 0.6;
+            blenderYCenter = (countRow * 2.4) + 0.61;
             blenderYSize = 1.2;
-            blenderZCenter = 0.9;
+            blenderZCenter = 0.91;
             blenderZSize = 1.8;
             tempRackData[rackName] = {
                 blenderXCenter: blenderXCenter,
@@ -80,12 +81,13 @@ function generateRacks(){
                 blenderYSize: blenderYSize,
                 blenderZCenter: blenderZCenter,
                 blenderZSize: blenderZSize,
-                colorStartBlue: 1.0,
-                colorStartGreen: 1.0,
-                colorStartRed: 1.0,
-                colorLineRed: 0.5,
-                colorLineGreen: 0.5,
-                colorLineBlue: 0.5,
+                blenderZUnitStart: 0.05,
+                colorStartBlue: 0.8,
+                colorStartGreen: 0.8,
+                colorStartRed: 0.8,
+                colorLineRed: 0.2,
+                colorLineGreen: 0.2,
+                colorLineBlue: 0.2,
                 colorTargetBlue: 0.9,
                 colorTargetGreen: 0.9,
                 colorTargetRed: 0.9,
@@ -105,19 +107,12 @@ function generateHardware(rackData){
     var blenderYCenter: number;
     var blenderZCenter: number;
     var blenderZRotation: number;
-    var colorStartBlue: number;
-    var colorStartGreen: number;
-    var colorStartRed: number;
-    var colorErrorBlue: number;
-    var colorErrorGreen: number;
-    var colorErrorRed: number;
-    var colorTargetBlue: number;
-    var colorTargetGreen: number;
-    var colorTargetRed: number;
-    var errorMessage: string;
     var name: string | null;
     var planeDimensions: Record<string,number> = {};
+    var rackU: number;
     var serverLoop: number;
+    var sledData: Record<string,number> = {};
+    var sledLoop: number;
     var tempHardwareData: Record<string,Hardware> = {};
     var unitHeight: number;
     var zStart: number;
@@ -128,7 +123,7 @@ function generateHardware(rackData){
         blenderXCenter = planeDimensions["blenderXCenter"];
         blenderYCenter = planeDimensions["blenderYCenter"];
         blenderZRotation = planeDimensions["blenderZRotation"];
-        zStart = rackData[rackName]["blenderZCenter"] - (rackData[rackName]["blenderZSize"] / 2) + 0.1;
+        zStart = rackData[rackName]["blenderZCenter"] - (rackData[rackName]["blenderZSize"] / 2) + rackData[rackName]["blenderZUnitStart"];
         // 4 unit servers
         blenderPlaneHeight = (unitHeight * 4) - 0.004;
         for (serverLoop = 0; serverLoop < 4; serverLoop++){
@@ -184,6 +179,35 @@ function generateHardware(rackData){
                 rack_uuid: rackData[rackName]["name"],
                 uuid: name
             }
+            // sleds
+            blenderPlaneHeight = (unitHeight * 2) - 0.004;
+            for (sledLoop = 0; sledLoop < 4; sledLoop++){
+                rackU = 17 + (serverLoop * 2);
+                sledData = calculateChassisSled(rackData[rackName], rackU, sledLoop + 1);
+                name = rackData[rackName]["name"] + "_sled_" + rackU + "_" + sledLoop;
+                tempHardwareData[name] = {
+                    canBeTargeted: true,
+                    blenderPlaneHeight: sledData["blenderPlaneHeight"],
+                    blenderPlaneWidth: sledData["blenderPlaneWidth"],
+                    blenderXCenter: sledData["blenderXCenter"],
+                    blenderYCenter: sledData["blenderYCenter"],
+                    blenderZCenter: sledData["blenderZCenter"],
+                    blenderZRotation: sledData["blenderZRotation"],
+                    colorStartBlue: 1,
+                    colorStartGreen: 1,
+                    colorStartRed: 1,
+                    colorErrorBlue: 1,
+                    colorErrorGreen: 1,
+                    colorErrorRed: 1,
+                    colorTargetBlue: 0.9,
+                    colorTargetGreen: 0.9,
+                    colorTargetRed: 0.9,
+                    errorMessage: "",
+                    name: name,
+                    rack_uuid: rackData[rackName]["name"],
+                    uuid: name
+                }
+            }
         }
     })
     return tempHardwareData;
@@ -232,6 +256,68 @@ function calculateRackMounted(rack: Rack){
         blenderXCenter,
         blenderYCenter,
         blenderZRotation
+    }
+}
+
+function calculateChassisSled(rack: Rack, rackU: number, uSlot: number){
+    var blenderPlaneHeight: number;
+    var blenderPlaneWidth: number;
+    var rackBase: number;
+    var rackMountWidth: number;
+    var sledWidth: number;
+    var unitHeight: number;
+    var blenderXCenter: number;
+    var blenderYCenter: number;
+    var blenderZCenter: number;
+    var blenderZRotation: number;
+    unitHeight = 0.0445;
+    blenderXCenter = 0;
+    blenderYCenter = 0;
+    blenderZCenter = 0;
+    blenderPlaneWidth = 1;
+    blenderPlaneHeight = 1;
+    blenderZRotation = 0;
+    if (rack["rotation"] % 2 == 0){
+        blenderZRotation = 1.570796;
+    }
+    if (rack["rotation"] == 0){
+        rackMountWidth = rack["blenderXSize"] * 0.8;
+        sledWidth = rackMountWidth / 20;
+        blenderXCenter = rack["blenderXCenter"] - (rackMountWidth * 0.5) + (sledWidth * (uSlot -1)) + (sledWidth * 0.5);
+        blenderYCenter = rack["blenderYCenter"] - (rack["blenderYSize"] * 0.5) - 0.004;
+        blenderPlaneWidth = sledWidth * 0.8;
+    }
+    if (rack["rotation"] == 1){
+        rackMountWidth = rack["blenderYSize"] * 0.8;
+        sledWidth = rackMountWidth / 20;
+        blenderXCenter = rack["blenderXCenter"] + (rack["blenderXSize"] * 0.5) + 0.004;
+        blenderYCenter = rack["blenderYCenter"] - (rackMountWidth * 0.5) + (sledWidth * (uSlot -1)) + (sledWidth * 0.5);
+        blenderPlaneWidth = sledWidth * 0.8;
+    }
+    if (rack["rotation"] == 2){
+        rackMountWidth = rack["blenderXSize"] * 0.8;
+        sledWidth = rackMountWidth / 20;
+        blenderXCenter = rack["blenderXCenter"] + (rackMountWidth * 0.5) - (sledWidth * (uSlot -1)) - (sledWidth * 0.5);
+        blenderYCenter = rack["blenderYCenter"] + (rack["blenderYSize"] * 0.5) + 0.004;
+        blenderPlaneWidth = sledWidth * 0.8;
+    }
+    if (rack["rotation"] == 3){
+        rackMountWidth = rack["blenderYSize"] * 0.8;
+        sledWidth = rackMountWidth / 20;
+        blenderXCenter = rack["blenderXCenter"] - (rack["blenderXSize"] * 0.5) - 0.004;
+        blenderYCenter = rack["blenderYCenter"] + (rackMountWidth * 0.5) - (sledWidth * (uSlot -1)) - (sledWidth * 0.5);
+        blenderPlaneWidth = sledWidth * 0.8;
+    }
+    rackBase = rack["blenderZCenter"] - (rack["blenderZSize"] / 2);
+    blenderZCenter = rackBase + rack["blenderZUnitStart"] + ((rackU - 1) * unitHeight) + (unitHeight * 0.5);
+    blenderPlaneHeight = unitHeight * 0.8;
+    return {
+        blenderPlaneHeight,
+        blenderPlaneWidth,
+        blenderXCenter,
+        blenderYCenter,
+        blenderZRotation,
+        blenderZCenter
     }
 }
 
