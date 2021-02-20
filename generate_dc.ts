@@ -1,11 +1,11 @@
 interface Hardware {
     canBeTargeted: boolean;
-    cartesianPlaneHeight: number;
-    cartesianPlaneWidth: number;
-    cartesianXCenter: number;
-    cartesianYCenter: number;
-    cartesianZCenter: number;
-    cartesianZRotation: number;
+    blenderPlaneHeight: number;
+    blenderPlaneWidth: number;
+    blenderXCenter: number;
+    blenderYCenter: number;
+    blenderZCenter: number;
+    blenderZRotation: number;
     colorStartBlue: number;
     colorStartGreen: number;
     colorStartRed: number;
@@ -22,12 +22,12 @@ interface Hardware {
 }
 
 interface Rack {
-    cartesianXCenter: number;
-    cartesianXSize: number;
-    cartesianYCenter: number;
-    cartesianYSize: number;
-    cartesianZCenter: number;
-    cartesianZSize: number;
+    blenderXCenter: number;
+    blenderXSize: number;
+    blenderYCenter: number;
+    blenderYSize: number;
+    blenderZCenter: number;
+    blenderZSize: number;
     colorStartBlue: number;
     colorStartGreen: number;
     colorStartRed: number;
@@ -48,38 +48,38 @@ function generateRacks(){
     var maxRow: number;
     var maxRack: number;
     var rackName: string;
-    var cartesianXCenter: number;
-    var cartesianXSize: number;
-    var cartesianYCenter: number;
-    var cartesianYSize: number;
-    var cartesianZCenter: number;
-    var cartesianZSize: number;
+    var blenderXCenter: number;
+    var blenderXSize: number;
+    var blenderYCenter: number;
+    var blenderYSize: number;
+    var blenderZCenter: number;
+    var blenderZSize: number;
     var rotation: number;
     var tempRackData: Record<string,Rack> = {};
-    maxRow = 2;
-    maxRack = 10;
+    maxRow = 6;
+    maxRack = 20;
     for (countRow = 0; countRow < maxRow; countRow++){
         for (countRack = 0; countRack < maxRack; countRack++){
             if (countRow % 2 == 0){
-                rotation = 0;
-            }
-            else {
                 rotation = 2;
             }
+            else {
+                rotation = 0;
+            }
             rackName = "rack_" + countRow + "_" + countRack;
-            cartesianXCenter = (countRow * 2) - 1;
-            cartesianXSize = 1;
-            cartesianYCenter = 0.9;
-            cartesianYSize = 1.8;
-            cartesianZCenter = (countRack + 1);
-            cartesianZSize = 0.98;
+            blenderXCenter = (countRack * 0.6) + 2.4;
+            blenderXSize = 0.58;
+            blenderYCenter = (countRow * 2.4) + 2.4;
+            blenderYSize = 1.2;
+            blenderZCenter = 0.9;
+            blenderZSize = 1.8;
             tempRackData[rackName] = {
-                cartesianXCenter: cartesianXCenter,
-                cartesianXSize: cartesianXSize,
-                cartesianYCenter: cartesianYCenter,
-                cartesianYSize: cartesianYSize,
-                cartesianZCenter: cartesianZCenter,
-                cartesianZSize: cartesianZSize,
+                blenderXCenter: blenderXCenter,
+                blenderXSize: blenderXSize,
+                blenderYCenter: blenderYCenter,
+                blenderYSize: blenderYSize,
+                blenderZCenter: blenderZCenter,
+                blenderZSize: blenderZSize,
                 colorStartBlue: 1.0,
                 colorStartGreen: 1.0,
                 colorStartRed: 1.0,
@@ -99,12 +99,12 @@ function generateRacks(){
 }
 
 function generateHardware(rackData){
-    var cartesianPlaneHeight: number;
-    var cartesianPlaneWidth: number;
-    var cartesianXCenter: number;
-    var cartesianYCenter: number;
-    var cartesianZCenter: number;
-    var cartesianZRotation: number;
+    var blenderPlaneHeight: number;
+    var blenderPlaneWidth: number;
+    var blenderXCenter: number;
+    var blenderYCenter: number;
+    var blenderZCenter: number;
+    var blenderZRotation: number;
     var colorStartBlue: number;
     var colorStartGreen: number;
     var colorStartRed: number;
@@ -124,24 +124,52 @@ function generateHardware(rackData){
     unitHeight = 0.0445;
     Object.keys(rackData).forEach(function(rackName){
         planeDimensions = calculateRackMounted(rackData[rackName]);
-        cartesianPlaneHeight = (unitHeight * 4) - 0.004;
-        cartesianPlaneWidth = planeDimensions["cartesianPlaneWidth"];
-        cartesianXCenter = planeDimensions["cartesianXCenter"];
-        cartesianYCenter = planeDimensions["cartesianYCenter"];
-        cartesianZRotation = planeDimensions["cartesianZRotation"];
-        zStart = rackData[rackName]["cartesianZCenter"] - (rackData[rackName]["cartesianZSize"] / 2) + 0.1;
+        blenderPlaneWidth = planeDimensions["blenderPlaneWidth"];
+        blenderXCenter = planeDimensions["blenderXCenter"];
+        blenderYCenter = planeDimensions["blenderYCenter"];
+        blenderZRotation = planeDimensions["blenderZRotation"];
+        zStart = rackData[rackName]["blenderZCenter"] - (rackData[rackName]["blenderZSize"] / 2) + 0.1;
         // 4 unit servers
+        blenderPlaneHeight = (unitHeight * 4) - 0.004;
         for (serverLoop = 0; serverLoop < 4; serverLoop++){
             name = rackData[rackName]["name"] + "_4u_" + serverLoop;
-            cartesianZCenter = zStart + (unitHeight * 2) + (unitHeight * serverLoop * 4);
+            blenderZCenter = zStart + (unitHeight * 2) + (unitHeight * serverLoop * 4);
             tempHardwareData[name] = {
                 canBeTargeted: true,
-                cartesianPlaneHeight: cartesianPlaneHeight,
-                cartesianPlaneWidth: cartesianPlaneWidth,
-                cartesianXCenter: cartesianXCenter,
-                cartesianYCenter: cartesianYCenter,
-                cartesianZCenter: cartesianZCenter,
-                cartesianZRotation: cartesianZRotation,
+                blenderPlaneHeight: blenderPlaneHeight,
+                blenderPlaneWidth: blenderPlaneWidth,
+                blenderXCenter: blenderXCenter,
+                blenderYCenter: blenderYCenter,
+                blenderZCenter: blenderZCenter,
+                blenderZRotation: blenderZRotation,
+                colorStartBlue: 1,
+                colorStartGreen: 1,
+                colorStartRed: 1,
+                colorErrorBlue: 1,
+                colorErrorGreen: 1,
+                colorErrorRed: 1,
+                colorTargetBlue: 0.9,
+                colorTargetGreen: 0.9,
+                colorTargetRed: 0.9,
+                errorMessage: "",
+                name: name,
+                rack_uuid: rackData[rackName]["name"],
+                uuid: name
+            }
+        }
+        // 2 unit servers
+        blenderPlaneHeight = (unitHeight * 2) - 0.004;
+        for (serverLoop = 0; serverLoop < 8; serverLoop++){
+            name = rackData[rackName]["name"] + "_2u_" + serverLoop;
+            blenderZCenter = zStart + (unitHeight * 17) + (unitHeight * serverLoop * 2);
+            tempHardwareData[name] = {
+                canBeTargeted: true,
+                blenderPlaneHeight: blenderPlaneHeight,
+                blenderPlaneWidth: blenderPlaneWidth,
+                blenderXCenter: blenderXCenter,
+                blenderYCenter: blenderYCenter,
+                blenderZCenter: blenderZCenter,
+                blenderZRotation: blenderZRotation,
                 colorStartBlue: 1,
                 colorStartGreen: 1,
                 colorStartRed: 1,
@@ -168,42 +196,42 @@ function generateHardware(rackData){
  * @param {number} modelRackUnits - the vertical size of the object in units
  */
 function calculateRackMounted(rack: Rack){
-    var cartesianPlaneWidth: number;
-    var cartesianXCenter: number;
-    var cartesianYCenter: number;
-    var cartesianZRotation: number;
-    cartesianXCenter = 0;
-    cartesianYCenter = 0;
-    cartesianPlaneWidth = 1;
-    cartesianZRotation = 0;
+    var blenderPlaneWidth: number;
+    var blenderXCenter: number;
+    var blenderYCenter: number;
+    var blenderZRotation: number;
+    blenderXCenter = 0;
+    blenderYCenter = 0;
+    blenderPlaneWidth = 1;
+    blenderZRotation = 0;
     if (rack["rotation"] % 2 == 0){
-        cartesianZRotation = 1.570796;
+        blenderZRotation = 1.570796;
     }
     if (rack["rotation"] == 0){
-        cartesianXCenter = rack["cartesianXCenter"];
-        cartesianYCenter = rack["cartesianYCenter"] - (rack["cartesianYSize"] * 0.5) - 0.002;
-        cartesianPlaneWidth = rack["cartesianXSize"] * 0.8;
+        blenderXCenter = rack["blenderXCenter"];
+        blenderYCenter = rack["blenderYCenter"] - (rack["blenderYSize"] * 0.5) - 0.002;
+        blenderPlaneWidth = rack["blenderXSize"] * 0.8;
     }
     if (rack["rotation"] == 1){
-        cartesianXCenter = rack["cartesianXCenter"] + (rack["cartesianXSize"] * 0.5) + 0.002;
-        cartesianYCenter = rack["cartesianYCenter"];
-        cartesianPlaneWidth = rack["cartesianYSize"] * 0.8;
+        blenderXCenter = rack["blenderXCenter"] + (rack["blenderXSize"] * 0.5) + 0.002;
+        blenderYCenter = rack["blenderYCenter"];
+        blenderPlaneWidth = rack["blenderYSize"] * 0.8;
     }
     if (rack["rotation"] == 2){
-        cartesianXCenter = rack["cartesianXCenter"];
-        cartesianYCenter = rack["cartesianYCenter"] + (rack["cartesianYSize"] * 0.5) + 0.002;
-        cartesianPlaneWidth = rack["cartesianXSize"] * 0.8;
+        blenderXCenter = rack["blenderXCenter"];
+        blenderYCenter = rack["blenderYCenter"] + (rack["blenderYSize"] * 0.5) + 0.002;
+        blenderPlaneWidth = rack["blenderXSize"] * 0.8;
     }
     if (rack["rotation"] == 3){
-        cartesianXCenter = rack["cartesianXCenter"] - (rack["cartesianXSize"] * 0.5) - 0.002;
-        cartesianYCenter = rack["cartesianYCenter"];
-        cartesianPlaneWidth = rack["cartesianYSize"] * 0.8;
+        blenderXCenter = rack["blenderXCenter"] - (rack["blenderXSize"] * 0.5) - 0.002;
+        blenderYCenter = rack["blenderYCenter"];
+        blenderPlaneWidth = rack["blenderYSize"] * 0.8;
     }
     return {
-        cartesianPlaneWidth,
-        cartesianXCenter,
-        cartesianYCenter,
-        cartesianZRotation
+        blenderPlaneWidth,
+        blenderXCenter,
+        blenderYCenter,
+        blenderZRotation
     }
 }
 
