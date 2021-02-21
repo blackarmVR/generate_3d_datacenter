@@ -15,11 +15,25 @@ interface Hardware {
     colorTargetBlue: number;
     colorTargetGreen: number;
     colorTargetRed: number;
+    datacenter: string;
     errorMessage: string;
     name: string | null;
     rack_uuid: string;
     uuid: string;
 }
+
+/*
+CREATE TABLE IF NOT EXISTS hardware (
+    task_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    start_date DATE,
+    due_date DATE,
+    status TINYINT NOT NULL,
+    priority TINYINT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)  ENGINE=INNODB;
+*/
 
 interface Rack {
     blenderXCenter: number;
@@ -38,16 +52,15 @@ interface Rack {
     colorTargetBlue: number;
     colorTargetGreen: number;
     colorTargetRed: number;
+    datacenter: string;
     name: string;
     rotation: number;
     uuid: string;
 }
 
-function generateRacks(){
+function generateRacks(datacenter: string,rowMax: number,rackMax: number){
     var countRow: number;
     var countRack: number;
-    var maxRow: number;
-    var maxRack: number;
     var rackName: string;
     var blenderXCenter: number;
     var blenderXSize: number;
@@ -57,10 +70,8 @@ function generateRacks(){
     var blenderZSize: number;
     var rotation: number;
     var tempRackData: Record<string,Rack> = {};
-    maxRow = 4;
-    maxRack = 8;
-    for (countRow = 0; countRow < maxRow; countRow++){
-        for (countRack = 0; countRack < maxRack; countRack++){
+    for (countRow = 0; countRow < rowMax; countRow++){
+        for (countRack = 0; countRack < rackMax; countRack++){
             if (countRow % 2 == 0){
                 rotation = 2;
             }
@@ -91,6 +102,7 @@ function generateRacks(){
                 colorTargetBlue: 0.9,
                 colorTargetGreen: 0.9,
                 colorTargetRed: 0.9,
+                datacenter: datacenter,
                 name: rackName,
                 rotation: rotation,
                 uuid: rackName
@@ -100,7 +112,7 @@ function generateRacks(){
     return tempRackData;
 }
 
-function generateHardware(rackData){
+function generateHardware(datacenter,rackData, sledMax){
     var blenderPlaneHeight: number;
     var blenderPlaneWidth: number;
     var blenderXCenter: number;
@@ -146,6 +158,7 @@ function generateHardware(rackData){
                 colorTargetBlue: 0.9,
                 colorTargetGreen: 0.9,
                 colorTargetRed: 0.9,
+                datacenter: datacenter,
                 errorMessage: "",
                 name: name,
                 rack_uuid: rackData[rackName]["name"],
@@ -174,6 +187,7 @@ function generateHardware(rackData){
                 colorTargetBlue: 0.9,
                 colorTargetGreen: 0.9,
                 colorTargetRed: 0.9,
+                datacenter: datacenter,
                 errorMessage: "",
                 name: name,
                 rack_uuid: rackData[rackName]["name"],
@@ -181,7 +195,7 @@ function generateHardware(rackData){
             }
             // sleds
             blenderPlaneHeight = (unitHeight * 2) - 0.004;
-            for (sledLoop = 0; sledLoop < 4; sledLoop++){
+            for (sledLoop = 0; sledLoop < sledMax; sledLoop++){
                 rackU = 17 + (serverLoop * 2);
                 sledData = calculateChassisSled(rackData[rackName], rackU, sledLoop + 1);
                 name = rackData[rackName]["name"] + "_sled_" + rackU + "_" + sledLoop;
@@ -202,6 +216,7 @@ function generateHardware(rackData){
                     colorTargetBlue: 0.9,
                     colorTargetGreen: 0.9,
                     colorTargetRed: 0.9,
+                    datacenter: datacenter,
                     errorMessage: "",
                     name: name,
                     rack_uuid: rackData[rackName]["name"],
@@ -321,9 +336,256 @@ function calculateChassisSled(rack: Rack, rackU: number, uSlot: number){
     }
 }
 
+
+function init() {
+    container = document.createElement( 'div' );
+    document.body.appendChild( container );
+    // @ts-ignore
+    scene = new THREE.Scene();
+    // @ts-ignore
+    scene.background = new THREE.Color( 0x808080 );
+    // camera
+    // @ts-ignore
+    camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    camera.position.y = 1.6;
+    // light
+    // @ts-ignore
+    scene.add(new THREE.AmbientLight(0xffffff));
+    // renderer
+    // @ts-ignore
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    // @ts-ignore
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+    renderer.xr.enabled = true;
+    container.appendChild( renderer.domElement );
+    // vr button
+    // @ts-ignore
+    document.body.appendChild( VRButton.createButton( renderer ) );
+    // controllers
+    controller1 = renderer.xr.getController( 0 );
+    scene.add( controller1 );
+    controller2 = renderer.xr.getController( 1 );
+    scene.add( controller2 );
+    // @ts-ignore
+    const controllerModelFactory = new XRControllerModelFactory();
+    // @ts-ignore
+    const handModelFactory = new XRHandModelFactory().setPath( "./models/fbx/" );
+    // Hand 1
+    controllerGrip1 = renderer.xr.getControllerGrip( 0 );
+    controllerGrip1.add( controllerModelFactory.createControllerModel( controllerGrip1 ) );
+    scene.add( controllerGrip1 );
+    hand1 = renderer.xr.getHand( 0 );
+    hand1.add( handModelFactory.createHandModel( hand1 ) );
+    scene.add( hand1 );
+    // Hand 2
+    controllerGrip2 = renderer.xr.getControllerGrip( 1 );
+    controllerGrip2.add( controllerModelFactory.createControllerModel( controllerGrip2 ) );
+    scene.add( controllerGrip2 );
+    hand2 = renderer.xr.getHand( 1 );
+    hand2.add( handModelFactory.createHandModel( hand2 ) );
+    scene.add( hand2 );
+    // lines from controllers
+    // @ts-ignore
+    const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -1 ) ] );
+    // @ts-ignore
+    const line = new THREE.Line( geometry );
+    line.name = 'line';
+    line.scale.z = 10;
+    controller1.add( line.clone() );
+    controller2.add( line.clone() );
+    // xyz axis
+    // 1.8 meter tall axeshelper
+    // @ts-ignore
+    var axesHelper = new THREE.AxesHelper(0.3);
+    scene.add( axesHelper );
+    // resize window
+    window.addEventListener( 'resize', onWindowResize );
+    // Create player object
+    // @ts-ignore
+    player = new THREE.Object3D();
+    // rotate to face between threeX and threeZ
+    player.rotation.y = Math.PI * -0.75;
+    player.position.x = -1;
+    player.position.z = -1;
+    scene.add(player);
+    const playerObjects = [
+        camera,
+        controller1,
+        controller2,
+        controllerGrip1,
+        controllerGrip2,
+        hand1,
+        hand2
+    ];
+    playerObjects.forEach((object) => player.add(object));
+}
+function buildRacks(rackData) {
+    var block = {};
+    Object.keys(rackData).forEach(function(rackName){
+        addCuboid(rackData[rackName]);
+    })
+}
+
+function addCuboid(rack){
+    var edges;
+    var geometry;
+    var line;
+    var material;
+    var mesh;
+    // @ts-ignore
+    geometry = new THREE.BoxGeometry(rack["blenderYSize"], rack["blenderZSize"], rack["blenderXSize"]);
+    // @ts-ignore
+    material = new THREE.MeshStandardMaterial();
+    material.color.setRGB(rack["colorStartRed"], rack["colorStartGreen"], rack["colorStartBlue"]);
+    // @ts-ignore
+    mesh = new THREE.Mesh(geometry, material);
+    /*
+    mesh.position.x = rack["blenderXCenter"];
+    mesh.position.y = rack["blenderYCenter"];
+    mesh.position.z = rack["blenderZCenter"];
+    */
+    mesh.position.x = rack["blenderYCenter"];
+    mesh.position.y = rack["blenderZCenter"];
+    mesh.position.z = rack["blenderXCenter"];
+    mesh.name = rack["name"];
+    scene.add(mesh);
+    // @ts-ignore
+    edges = new THREE.EdgesGeometry(geometry);
+    // @ts-ignore
+    material = new THREE.LineBasicMaterial();
+    material.color.setRGB(rack["colorLineRed"], rack["colorLineRed"], rack["colorLineRed"]);
+    // @ts-ignore
+    line = new THREE.LineSegments(edges, material);
+    mesh.add(line);
+}
+
+function buildHardware(hardwareData){
+    var plane = {};
+    Object.keys(hardwareData).forEach(function(hardwareName){
+        addPlane(hardwareData[hardwareName]);
+    })
+}
+
+ function addPlane(plane){
+    var geometry;
+    var material;
+    var mesh;
+    // @ts-ignore
+    geometry = new THREE.PlaneGeometry(plane["blenderPlaneWidth"], plane["blenderPlaneHeight"]);
+    // @ts-ignore
+    material = new THREE.MeshStandardMaterial({side: THREE.DoubleSide});
+    material.color.setRGB(plane["colorStartRed"],plane["colorStartGreen"],plane["colorStartBlue"]);
+    // @ts-ignore
+    mesh = new THREE.Mesh(geometry,material);
+    mesh.position.x = plane["blenderYCenter"];
+    mesh.position.y = plane["blenderZCenter"];
+    mesh.position.z = plane["blenderXCenter"];
+    mesh.rotation.y = plane["blenderZRotation"];
+    mesh.name = plane["name"];
+    scene.add(mesh);
+    // @ts-ignore
+    const edges = new THREE.EdgesGeometry( geometry );
+    // @ts-ignore
+    const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000} ) );
+    line.position.x = plane["blenderYCenter"];
+    line.position.y = plane["blenderZCenter"];
+    line.position.z = plane["blenderXCenter"];
+    line.rotation.y = plane["blenderZRotation"];
+    scene.add( line );
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    renderer.setAnimationLoop(render);
+}
+
+function render() {
+    const session = renderer.xr.getSession();
+    // check if the session exists
+    if (session) {
+        const sources = session.inputSources;
+        // check if the session has input sources
+        if (sources){
+            const controllerZero = sources[0];
+            // check that input source zero exists
+            if (controllerZero){
+                const gamepad = controllerZero.gamepad;
+                // check that input source zero has a gamepad
+                if (gamepad){
+                    const axes = gamepad.axes;
+                    // check that gamepad has axes
+                    if (axes){
+                        // rotate
+                        if (axes[2] < -0.8 && turnEnabled == true){
+                            player.rotation.y += Math.PI * 0.25;
+                            turnEnabled = false;
+                        }
+                        if (axes[2] > 0.8 && turnEnabled == true){
+                            player.rotation.y -= Math.PI * 0.25;
+                            turnEnabled = false;
+                        }
+                        if (axes[2] > -0.2 && axes[2] < 0.2){
+                            turnEnabled = true;
+                        }
+                        //player.rotation.y += axes[2] * -0.01;
+                        // up/down
+                        //if (axes.length > 5){
+                        //    player.position.z = 5;
+                        //}
+                        /*
+                        if (axes[0] != 0){
+                            //player.position.z = axes[0] * 2;
+                        }
+                        if (axes[1] != 0){
+                            //player.position.z = axes[1] * 2;
+                        }
+                        if (axes[2] != 0){
+                            */
+                            /*
+                        }
+                        if (axes[3] != 0){
+                            //player.position.z = axes[3] * 2;
+                        }
+                        */
+                    }
+                }
+            }
+        }
+    }
+    //player.position.x = (performance.now() % 40000) / 40000 * 22;
+    renderer.render(scene, camera);
+}
+
+// globals
+var turnEnabled = true;
+let container;
+let camera, scene, renderer;
+let hand1, hand2;
+let controller1, controller2;
+let controllerGrip1, controllerGrip2;
+let player;
 var rackData: Record<string,Rack> = {};
 var hardwareData: Record<string,Hardware> = {};
-rackData = generateRacks();
-hardwareData = generateHardware(rackData);
-console.log("var rackData = " + JSON.stringify(rackData));
-console.log("var hardwareData = " + JSON.stringify(hardwareData));
+var datacenter: string;
+var rowMax: number;
+var rackMax: number;
+var sledMax: number;
+datacenter = "test_a2sa";
+rowMax = 4;
+rackMax = 10;
+sledMax = 4;
+rackData = generateRacks(datacenter,rowMax,rackMax);
+hardwareData = generateHardware(datacenter,rackData,sledMax);
+
+init();
+buildRacks(rackData);
+buildHardware(hardwareData);
+animate();
