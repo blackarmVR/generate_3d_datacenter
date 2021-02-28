@@ -83,8 +83,8 @@ function generateRacks(datacenter: string,rowMax: number,rackMax: number){
             blenderXSize = 0.6;
             blenderYCenter = (countRow * 2.4) + 0.61;
             blenderYSize = 1.2;
-            blenderZCenter = 0.91;
-            blenderZSize = 1.8;
+            blenderZCenter = 1.11;
+            blenderZSize = 2.2;
             tempRackData[rackName] = {
                 blenderXCenter: blenderXCenter,
                 blenderXSize: blenderXSize,
@@ -140,6 +140,7 @@ function generateHardware(datacenter,rackData, sledMax){
         blenderPlaneHeight = (unitHeight * 4) - 0.004;
         for (serverLoop = 0; serverLoop < 4; serverLoop++){
             name = rackData[rackName]["name"] + "_4u_" + serverLoop;
+            hardwareNames.push(name)
             blenderZCenter = zStart + (unitHeight * 2) + (unitHeight * serverLoop * 4);
             tempHardwareData[name] = {
                 canBeTargeted: true,
@@ -167,8 +168,9 @@ function generateHardware(datacenter,rackData, sledMax){
         }
         // 2 unit servers
         blenderPlaneHeight = (unitHeight * 2) - 0.004;
-        for (serverLoop = 0; serverLoop < 8; serverLoop++){
+        for (serverLoop = 0; serverLoop < 15; serverLoop++){
             name = rackData[rackName]["name"] + "_2u_" + serverLoop;
+            hardwareNames.push(name)
             blenderZCenter = zStart + (unitHeight * 17) + (unitHeight * serverLoop * 2);
             tempHardwareData[name] = {
                 canBeTargeted: true,
@@ -199,6 +201,7 @@ function generateHardware(datacenter,rackData, sledMax){
                 rackU = 17 + (serverLoop * 2);
                 sledData = calculateChassisSled(rackData[rackName], rackU, sledLoop + 1);
                 name = rackData[rackName]["name"] + "_sled_" + rackU + "_" + sledLoop;
+                hardwareNames.push(name)
                 tempHardwareData[name] = {
                     canBeTargeted: true,
                     blenderPlaneHeight: sledData["blenderPlaneHeight"],
@@ -504,12 +507,30 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+function param(name) {
+    var paramString: string;
+    var paramValue: number;
+    paramString = (location.search.split(name + '=')[1] || '').split('&')[0];
+    paramValue = parseInt(paramString);
+    return paramValue;
+}
+
+function randomize(){
+    var randomObject: number;
+    var hardwareToColor: any;
+    randomObject = Math.floor(hardwareNames.length * Math.random());
+    hardwareToColor = scene.getObjectByName(hardwareNames[randomObject]);
+    if (hardwareToColor){
+        hardwareToColor.material.color.setRGB(Math.random(),Math.random(),Math.random());
+    }
+}
+
 function animate() {
     renderer.setAnimationLoop(render);
 }
 
 function render() {
-    camera.x += 0.1
+    randomize();
     const session = renderer.xr.getSession();
     // check if the session exists
     if (session) {
@@ -566,14 +587,6 @@ function render() {
     renderer.render(scene, camera);
 }
 
-function param(name) {
-    var paramString: string;
-    var paramValue: number;
-    paramString = (location.search.split(name + '=')[1] || '').split('&')[0];
-    paramValue = parseInt(paramString);
-    return paramValue;
-}
-
 // globals
 var turnEnabled = true;
 let container;
@@ -584,32 +597,30 @@ let controllerGrip1, controllerGrip2;
 let player;
 var rackData: Record<string,Rack> = {};
 var hardwareData: Record<string,Hardware> = {};
+var hardwareNames: Array<string> = [];
 var datacenter: string;
 var rowMax: number;
 var rackMax: number;
 var sledMax: number;
 var paramValue: number;
 datacenter = "test_a2sa";
-rowMax = 4;
+rowMax = 2;
 paramValue = param("rowMax");
 if (paramValue){
     rowMax = paramValue;
 }
-rackMax = 4;
+rackMax = 8;
 paramValue = param("rackMax");
 if (paramValue){
     rackMax = paramValue;
 }
-sledMax = 2;
+sledMax = 4;
 paramValue = param("sledMax");
 if (paramValue){
     sledMax = paramValue;
 }
 rackData = generateRacks(datacenter,rowMax,rackMax);
 hardwareData = generateHardware(datacenter,rackData,sledMax);
-
-
-console.log(param("fish"))
 
 init();
 buildRacks(rackData);
