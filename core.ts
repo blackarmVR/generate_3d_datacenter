@@ -93,12 +93,12 @@ function generateRacks(datacenter: string,rowMax: number,rackMax: number){
                 blenderZCenter: blenderZCenter,
                 blenderZSize: blenderZSize,
                 blenderZUnitStart: 0.05,
-                colorStartBlue: 0.8,
-                colorStartGreen: 0.8,
-                colorStartRed: 0.8,
-                colorLineRed: 0.2,
-                colorLineGreen: 0.2,
-                colorLineBlue: 0.2,
+                colorStartBlue: 0.1,
+                colorStartGreen: 0.1,
+                colorStartRed: 0.1,
+                colorLineRed: 1.0,
+                colorLineGreen: 1.0,
+                colorLineBlue: 1.0,
                 colorTargetBlue: 0.9,
                 colorTargetGreen: 0.9,
                 colorTargetRed: 0.9,
@@ -149,9 +149,9 @@ function generateHardware(datacenter,rackData, sledMax){
                 blenderYCenter: blenderYCenter,
                 blenderZCenter: blenderZCenter,
                 blenderZRotation: blenderZRotation,
-                colorStartBlue: 1,
-                colorStartGreen: 1,
-                colorStartRed: 1,
+                colorStartBlue: Math.random(),
+                colorStartGreen: Math.random(),
+                colorStartRed: Math.random(),
                 colorErrorBlue: 1,
                 colorErrorGreen: 1,
                 colorErrorRed: 1,
@@ -178,9 +178,9 @@ function generateHardware(datacenter,rackData, sledMax){
                 blenderYCenter: blenderYCenter,
                 blenderZCenter: blenderZCenter,
                 blenderZRotation: blenderZRotation,
-                colorStartBlue: 1,
-                colorStartGreen: 1,
-                colorStartRed: 1,
+                colorStartBlue: Math.random(),
+                colorStartGreen: Math.random(),
+                colorStartRed: Math.random(),
                 colorErrorBlue: 1,
                 colorErrorGreen: 1,
                 colorErrorRed: 1,
@@ -207,9 +207,9 @@ function generateHardware(datacenter,rackData, sledMax){
                     blenderYCenter: sledData["blenderYCenter"],
                     blenderZCenter: sledData["blenderZCenter"],
                     blenderZRotation: sledData["blenderZRotation"],
-                    colorStartBlue: 1,
-                    colorStartGreen: 1,
-                    colorStartRed: 1,
+                    colorStartBlue: Math.random(),
+                    colorStartGreen: Math.random(),
+                    colorStartRed: Math.random(),
                     colorErrorBlue: 1,
                     colorErrorGreen: 1,
                     colorErrorRed: 1,
@@ -343,11 +343,11 @@ function init() {
     // @ts-ignore
     scene = new THREE.Scene();
     // @ts-ignore
-    scene.background = new THREE.Color( 0x808080 );
+    scene.background = new THREE.Color( 0x000000 );
     // camera
     // @ts-ignore
     camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    camera.position.y = 1.6;
+    camera.position.y = 1.0;
     // light
     // @ts-ignore
     scene.add(new THREE.AmbientLight(0xffffff));
@@ -407,8 +407,8 @@ function init() {
     // @ts-ignore
     player = new THREE.Object3D();
     // rotate to face between threeX and threeZ
-    player.rotation.y = Math.PI * -0.75;
-    player.position.x = -1;
+    player.rotation.y = Math.PI * -1;
+    player.position.x = 1.8;
     player.position.z = -1;
     scene.add(player);
     const playerObjects = [
@@ -456,7 +456,8 @@ function addCuboid(rack){
     edges = new THREE.EdgesGeometry(geometry);
     // @ts-ignore
     material = new THREE.LineBasicMaterial();
-    material.color.setRGB(rack["colorLineRed"], rack["colorLineRed"], rack["colorLineRed"]);
+    //material.color.setRGB(rack["colorLineRed"], rack["colorLineRed"], rack["colorLineRed"]);
+    material.color.setRGB(0,0,0);
     // @ts-ignore
     line = new THREE.LineSegments(edges, material);
     mesh.add(line);
@@ -508,6 +509,7 @@ function animate() {
 }
 
 function render() {
+    camera.x += 0.1
     const session = renderer.xr.getSession();
     // check if the session exists
     if (session) {
@@ -564,6 +566,14 @@ function render() {
     renderer.render(scene, camera);
 }
 
+function param(name) {
+    var paramString: string;
+    var paramValue: number;
+    paramString = (location.search.split(name + '=')[1] || '').split('&')[0];
+    paramValue = parseInt(paramString);
+    return paramValue;
+}
+
 // globals
 var turnEnabled = true;
 let container;
@@ -578,12 +588,28 @@ var datacenter: string;
 var rowMax: number;
 var rackMax: number;
 var sledMax: number;
+var paramValue: number;
 datacenter = "test_a2sa";
 rowMax = 4;
-rackMax = 10;
-sledMax = 4;
+paramValue = param("rowMax");
+if (paramValue){
+    rowMax = paramValue;
+}
+rackMax = 4;
+paramValue = param("rackMax");
+if (paramValue){
+    rackMax = paramValue;
+}
+sledMax = 2;
+paramValue = param("sledMax");
+if (paramValue){
+    sledMax = paramValue;
+}
 rackData = generateRacks(datacenter,rowMax,rackMax);
 hardwareData = generateHardware(datacenter,rackData,sledMax);
+
+
+console.log(param("fish"))
 
 init();
 buildRacks(rackData);
