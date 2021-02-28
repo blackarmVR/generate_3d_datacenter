@@ -348,7 +348,7 @@ function init() {
     // rotate to face between threeX and threeZ
     player.rotation.y = Math.PI * -1;
     player.position.x = 1.8;
-    player.position.z = -1;
+    player.position.z = 0;
     scene.add(player);
     var playerObjects = [
         camera,
@@ -536,12 +536,12 @@ paramValue = param("rowMax");
 if (paramValue) {
     rowMax = paramValue;
 }
-rackMax = 8;
+rackMax = 4;
 paramValue = param("rackMax");
 if (paramValue) {
     rackMax = paramValue;
 }
-sledMax = 4;
+sledMax = 2;
 paramValue = param("sledMax");
 if (paramValue) {
     sledMax = paramValue;
