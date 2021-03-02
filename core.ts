@@ -412,7 +412,7 @@ function init() {
     // rotate to face between threeX and threeZ
     player.rotation.y = Math.PI * -1;
     player.position.x = 1.8;
-    player.position.z = 0;
+    player.position.z = -0.5;
     scene.add(player);
     const playerObjects = [
         camera,
@@ -530,7 +530,11 @@ function animate() {
 }
 
 function render() {
-    randomize();
+    frameCount += 1;
+    if (frameCount > 300){
+        randomize();
+        frameCount = 0;
+    }
     const session = renderer.xr.getSession();
     // check if the session exists
     if (session) {
@@ -594,6 +598,7 @@ let camera, scene, renderer;
 let hand1, hand2;
 let controller1, controller2;
 let controllerGrip1, controllerGrip2;
+var frameCount;
 let player;
 var rackData: Record<string,Rack> = {};
 var hardwareData: Record<string,Hardware> = {};
@@ -604,6 +609,7 @@ var rackMax: number;
 var sledMax: number;
 var paramValue: number;
 datacenter = "test_a2sa";
+frameCount = 0;
 rowMax = 2;
 paramValue = param("rowMax");
 if (paramValue){
